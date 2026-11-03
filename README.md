@@ -9,6 +9,8 @@
 - 서버가 없거나 모르는 상태값이면 안내 문구와 회색 LED로 표시됩니다.
 - 모션 줄이기 설정에서는 깜빡임이 꺼집니다.
 
+배포 주소: https://server-room-agent.vercel.app
+
 ## 실행 방법
 
 ```bash
@@ -26,11 +28,18 @@ python -m http.server 8080 -d public
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
-| 1 | 서버실 화면 + 배포 | 진행 중 |
+| 1 | 서버실 화면 + 배포 | 완료 (2026-11-03) |
 | 2 | Supabase로 데이터 이동 + 잠금 | 예정 |
 | 3 | 서버 함수 | 예정 |
 | 4 | AI 부사수 | 예정 |
 | 5 | 제한·보안 + 시나리오 추가 | 예정 |
 | 6 | 정리 | 예정 |
+
+### 1단계 완료 기준 확인 (2026-11-03)
+
+- [x] 배포 주소에서 서버 4대가 보인다 (`data-server-id` 4개, 주의 LED 1개)
+- [x] 저장소가 공개이다
+- [x] README에 단계 기록이 있다
+- [x] `/.env`, `/package.json`, `/AGENTS.md`, `/README.md`, `/vercel.json`, `/test/` 요청은 404
 
 설계: `docs/superpowers/specs/2026-11-03-server-room-agent-design.md`
