@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SERVERS } from '../public/servers.mjs';
-import { renderRack } from '../public/rack.mjs';
+import { SERVERS } from './fixtures.mjs';
+import { renderRack, renderError } from '../public/rack.mjs';
 
 const count = (text, needle) => text.split(needle).length - 1;
 
@@ -24,6 +24,10 @@ test('이름의 HTML은 글자로 나온다', () => {
 
 test('빈 목록이면 안내가 나온다', () => {
   assert.ok(renderRack([]).includes('서버가 없어요'));
+});
+
+test('renderError는 불러오지 못했어요 안내를 돌려준다', () => {
+  assert.ok(renderError().includes('불러오지 못했어요'));
 });
 
 test('알 수 없는 상태는 led-unknown과 알 수 없음으로 나온다', () => {

@@ -21,6 +21,14 @@ function renderServer(s) {
 </li>`;
 }
 
+export function renderLoading() {
+  return '<p class="empty">불러오는 중…</p>';
+}
+
+export function renderError() {
+  return '<p class="empty">불러오지 못했어요</p>';
+}
+
 export function renderRack(servers) {
   if (!servers || servers.length === 0) {
     return '<p class="empty">서버가 없어요</p>';
