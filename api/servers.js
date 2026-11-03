@@ -16,7 +16,8 @@ export default async function handler(req, res, deps = { env: process.env, fetch
   try {
     const servers = await deps.fetchServers({ url, key });
     return res.status(200).json({ servers });
-  } catch {
+  } catch (error) {
+    console.error('servers upstream failed, status:', error?.status ?? 'none');
     return res.status(502).json({ error: '불러오지 못했어요' });
   }
 }

@@ -14,13 +14,32 @@ test('DB 행을 화면 모양으로 바꾼다', async () => {
   assert.deepEqual(result, SERVERS);
 });
 
-test('요청에 슬롯 정렬과 두 헤더가 있다', async () => {
+// 테스트 파일에 JWT 모양 문자열이 그대로 남지 않게 실행 중에 만듭니다.
+const JWT_KEY = ['ey', 'Jhbgci'].join('') + 'x'.repeat(30);
+
+test('JWT 키(예전 방식 서버 키)는 apikey와 Authorization 두 헤더로 보낸다', async () => {
   const calls = [];
-  await fetchServers({ ...base, fetchImpl: okFetch(ROWS, calls) });
+  await fetchServers({ url: base.url, key: JWT_KEY, fetchImpl: okFetch(ROWS, calls) });
   assert.ok(calls[0].url.startsWith('https://x.supabase.co/rest/v1/servers?'));
   assert.ok(calls[0].url.includes('order=slot.asc'));
+  assert.equal(calls[0].init.headers.apikey, JWT_KEY);
+  assert.equal(calls[0].init.headers.Authorization, `Bearer ${JWT_KEY}`);
+});
+
+test('JWT가 아닌 키(새 sb_secret_)는 apikey 헤더만 보낸다', async () => {
+  const calls = [];
+  await fetchServers({ ...base, fetchImpl: okFetch(ROWS, calls) });
   assert.equal(calls[0].init.headers.apikey, 'SECRET123');
-  assert.equal(calls[0].init.headers.Authorization, 'Bearer SECRET123');
+  assert.equal(calls[0].init.headers.Authorization, undefined);
+});
+
+test('거절당하면 오류에 상태 코드가 담기고 키는 담기지 않는다', async () => {
+  const fetchImpl = async () => ({ ok: false, status: 401, json: async () => ({}) });
+  await assert.rejects(fetchServers({ ...base, fetchImpl }), (err) => {
+    assert.equal(err.status, 401);
+    assert.ok(!err.message.includes('SECRET123'));
+    return true;
+  });
 });
 
 test('ok가 아닌 응답은 upstream 오류', async () => {
