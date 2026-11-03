@@ -52,7 +52,7 @@ python -m http.server 8080 -d public
 - [x] 공개 파일에 서버 상태 데이터가 없다 (`test/no-state-in-public.test.mjs`, 배포된 `/servers.mjs`·`/app.js`·`/rack.mjs`에 서버 이름 없음)
 - [x] 배포 화면에서 서버 4대가 보인다 (정상 3대, `db-01` 주의)
 - [x] `/supabase/001_servers.sql`, `/.env`, `/package.json`은 404, `POST /api/servers`는 405
-- [ ] 배포된 `/api/servers` 응답에 키가 없다 (수정 후 배포에서 재확인 예정)
+- [x] 배포된 `/api/servers` 응답(본문·헤더)과 화면 코드에 키 흔적이 없다 (수정 후 배포 기준, 200 응답에 서버 4대)
 
 ### 막혔던 점
 
