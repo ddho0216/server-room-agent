@@ -22,3 +22,6 @@ on conflict (id) do nothing;
 -- 잠금: 정책을 하나도 만들지 않으므로 서버 전용 키만 읽고 쓸 수 있습니다.
 alter table public.servers enable row level security;
 revoke all on table public.servers from anon, authenticated;
+
+-- 서버 함수가 쓰는 서버 전용 역할에만 읽기를 허용합니다. 다시 실행해도 안전합니다.
+grant select on table public.servers to service_role;

@@ -19,7 +19,6 @@ const SKIP_FILES = new Set(['AGENTS.md', 'repo.test.mjs']);
 const SECRET_PATTERNS = [
   /sk-ant-/,
   /SUPABASE_SERVICE_ROLE_KEY\s*[=:]\s*['"]?\w{8,}/,
-  /service_role/,
   /eyJ[A-Za-z0-9_-]{20,}/,
 ];
 

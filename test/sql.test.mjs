@@ -8,9 +8,13 @@ test('RLS를 켠다', () => {
   assert.match(sql(), /alter table public\.servers enable row level security/i);
 });
 
-test('anon과 authenticated의 권한을 회수하고 grant는 쓰지 않는다', () => {
+test('anon과 authenticated의 권한을 회수하고 둘에게는 grant하지 않는다', () => {
   assert.match(sql(), /revoke all on table public\.servers from anon, authenticated/i);
-  assert.doesNotMatch(sql(), /\bgrant\b/i);
+  assert.doesNotMatch(sql(), /grant[^;]*\b(anon|authenticated)\b/i);
+});
+
+test('서버 전용 역할에만 읽기 권한을 준다', () => {
+  assert.match(sql(), /grant select on table public\.servers to service_role/i);
 });
 
 test('서버 4건을 넣는다', () => {
