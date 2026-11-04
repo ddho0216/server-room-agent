@@ -67,3 +67,22 @@ test('네트워크 오류도 upstream 오류이고 메시지에 키가 없다', 
     return true;
   });
 });
+
+test('issue가 있는 행은 문자열로, 없는 행은 null로 바꾼다', async () => {
+  const rows = [{ ...ROWS[0], issue: 'temp' }, { ...ROWS[1], issue: null }];
+  const result = await fetchServers({ ...base, fetchImpl: okFetch(rows) });
+  assert.equal(result[0].issue, 'temp');
+  assert.equal(result[1].issue, null);
+});
+
+test('issue 칸이 아예 없는 행도 null로 받는다', async () => {
+  const { issue, ...noIssue } = ROWS[0];
+  const result = await fetchServers({ ...base, fetchImpl: okFetch([noIssue]) });
+  assert.equal(result[0].issue, null);
+});
+
+test('요청이 issue 칸을 고른다', async () => {
+  const calls = [];
+  await fetchServers({ ...base, fetchImpl: okFetch(ROWS, calls) });
+  assert.ok(calls[0].url.includes('issue'));
+});
