@@ -26,3 +26,9 @@ export function toolLabel(name) {
   if (name === undefined || name === null) return '';
   return Object.hasOwn(TOOL_LABELS, name) ? TOOL_LABELS[name] : String(name);
 }
+
+const BRAIN_LABELS = { rule: '규칙 기반 시뮬레이션', anthropic: 'AI 모델' };
+
+export function brainLabel(brain) {
+  return Object.hasOwn(BRAIN_LABELS, brain) ? BRAIN_LABELS[brain] : '';
+}

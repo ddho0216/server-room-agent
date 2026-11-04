@@ -33,3 +33,8 @@ test('index.html에 부사수, 승인 대기, 활동 자리가 있다', () => {
   assert.ok(html.includes('id="pending"'));
   assert.ok(html.includes('id="activity"'));
 });
+
+test('app.js는 응답의 brain을 라벨로 보여 준다', () => {
+  assert.ok(app.includes('brain'));
+  assert.ok(app.includes('brainLabel'));
+});

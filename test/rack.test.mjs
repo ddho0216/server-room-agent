@@ -185,3 +185,10 @@ test('renderLog는 기록을 이스케이프하고 비면 안내', () => {
   assert.ok(renderLog([]).includes('아직 기록이 없어요'));
   assert.ok(renderLog(undefined).includes('아직 기록이 없어요'));
 });
+
+test('renderChat에 규칙 기반 시뮬레이션이라는 안내가 있다', () => {
+  const html = renderChat();
+  assert.ok(html.includes('class="note"'));
+  assert.ok(html.includes('규칙'));
+  assert.ok(html.includes('시뮬레이션'));
+});

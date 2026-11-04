@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { statusLabel, issueLabel, toolLabel } from '../public/servers.mjs';
+import { statusLabel, issueLabel, toolLabel, brainLabel } from '../public/servers.mjs';
 import { SERVERS } from './fixtures.mjs';
 
 test('테스트용 서버는 4대이고 id가 모두 다르다', () => {
@@ -45,4 +45,11 @@ test('toolLabel은 도구 이름을 한국어로 바꾸고 모르는 이름은 �
   assert.equal(toolLabel('save_report'), '보고서 저장');
   assert.equal(toolLabel('mystery'), 'mystery');
   assert.equal(toolLabel(undefined), '');
+});
+
+test('brainLabel은 뇌 종류를 한국어로 바꾸고 모르는 값은 빈 문자열', () => {
+  assert.equal(brainLabel('rule'), '규칙 기반 시뮬레이션');
+  assert.equal(brainLabel('anthropic'), 'AI 모델');
+  assert.equal(brainLabel('x'), '');
+  assert.equal(brainLabel(undefined), '');
 });

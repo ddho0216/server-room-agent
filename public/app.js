@@ -1,3 +1,4 @@
+import { brainLabel } from './servers.mjs';
 import {
   renderRack,
   renderLoading,
@@ -91,9 +92,16 @@ async function ask(text) {
   buttons.forEach((b) => (b.disabled = true));
   replyBox.textContent = '확인하는 중…';
   try {
-    const { reply, steps } = await post('/api/agent', { message: trimmed });
+    const { reply, steps, brain } = await post('/api/agent', { message: trimmed });
     replyBox.textContent = reply;
     replyBox.insertAdjacentHTML('beforeend', renderSteps(steps));
+    const label = brainLabel(brain);
+    if (label) {
+      const tag = document.createElement('p');
+      tag.className = 'brain';
+      tag.textContent = label;
+      replyBox.append(tag);
+    }
     input.value = '';
     await refreshActivity();
   } catch (error) {

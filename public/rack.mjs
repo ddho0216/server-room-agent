@@ -67,6 +67,7 @@ export function renderIncidentPanel(servers) {
 export function renderChat() {
   return `<div class="chat">
   <label for="agent-input">부사수에게 말하기</label>
+  <p class="note">부사수는 규칙으로 움직이는 시뮬레이션이에요. 도구 호출, 승인, 기록은 진짜로 동작해요.</p>
   <div class="chat-row">
     <input id="agent-input" type="text" maxlength="300" placeholder="예: 서버 상태 확인해 줘" autocomplete="off">
     <button id="agent-send" type="button">보내기</button>
