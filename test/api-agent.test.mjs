@@ -5,11 +5,12 @@ import handler, { MAX_RUNS_PER_HOUR, MAX_MESSAGE_LENGTH } from '../api/agent.js'
 
 const SB_KEY = 'SECRET123';
 const AI_KEY = 'AIKEY456';
-const env = {
+const envRule = {
   SUPABASE_URL: 'https://x.supabase.co',
   SUPABASE_SERVICE_ROLE_KEY: SB_KEY,
-  ANTHROPIC_API_KEY: AI_KEY,
 };
+const envAnthropic = { ...envRule, LLM_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: AI_KEY };
+const env = envRule;
 const RESULT = {
   reply: '이상 없어요',
   steps: [{ tool: 'get_server_status', input: {}, status: 'done' }],
@@ -32,8 +33,8 @@ function makeDeps({ count = 0, agent, logFails = false, envOverride = env } = {}
     now: () => new Date('2026-11-04T03:00:00.000Z'),
     fetchServers: async () => [],
     restRequest: async () => ({ status: 200, data: [] }),
-    createClient: async (apiKey) => {
-      seen.clients.push(apiKey);
+    createClient: async (provider, apiKey) => {
+      seen.clients.push({ provider, apiKey });
       return { fake: true };
     },
     runAgent:
@@ -66,18 +67,63 @@ test('정상 요청은 200과 답, 단계, 승인 대기를 돌려준다', async
   const deps = makeDeps();
   const res = await run('POST', say('순회 점검 해줘'), deps);
   assert.equal(res.statusCode, 200);
-  assert.deepEqual(res.body, RESULT);
+  assert.deepEqual(res.body, { ...RESULT, brain: 'rule' });
   assert.equal(deps.seen.agentCalls.length, 1);
   const call = deps.seen.agentCalls[0];
   assert.equal(call.message, '순회 점검 해줘');
-  assert.equal(call.model, 'claude-opus-5-5');
   assert.equal(call.client.fake, true);
-  assert.equal(deps.seen.clients[0], AI_KEY);
+  assert.deepEqual(deps.seen.clients[0], { provider: 'rule', apiKey: undefined });
   assert.equal(call.ctx.url, 'https://x.supabase.co');
 });
 
+test('기본값과 LLM_PROVIDER=rule은 Anthropic 키 없이 규칙 뇌로 동작한다', async () => {
+  for (const extra of [{}, { LLM_PROVIDER: 'rule' }, { LLM_PROVIDER: '' }]) {
+    const deps = makeDeps({ envOverride: { ...envRule, ...extra } });
+    const res = await run('POST', say('점검'), deps);
+    assert.equal(res.statusCode, 200, JSON.stringify(extra));
+    assert.equal(res.body.brain, 'rule');
+    assert.deepEqual(deps.seen.clients[0], { provider: 'rule', apiKey: undefined });
+  }
+});
+
+test('LLM_PROVIDER=anthropic이면 키와 모델을 넘기고 brain이 anthropic', async () => {
+  const deps = makeDeps({ envOverride: envAnthropic });
+  const res = await run('POST', say('점검'), deps);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.brain, 'anthropic');
+  assert.deepEqual(deps.seen.clients[0], { provider: 'anthropic', apiKey: AI_KEY });
+  assert.equal(deps.seen.agentCalls[0].model, 'claude-opus-5-5');
+});
+
+test('anthropic인데 키가 없으면 500', async () => {
+  const deps = makeDeps({ envOverride: { ...envRule, LLM_PROVIDER: 'anthropic' } });
+  const res = await run('POST', say('점검'), deps);
+  assert.equal(res.statusCode, 500);
+  assert.equal(deps.seen.agentCalls.length, 0);
+});
+
+test('알 수 없는 LLM_PROVIDER는 500이고 응답에 설정 이름이 없으며 모델을 부르지 않는다', async () => {
+  for (const provider of ['gpt', 'RULE', 'Anthropic', 'groq', 'rule ']) {
+    const deps = makeDeps({ envOverride: { ...envRule, LLM_PROVIDER: provider, ANTHROPIC_API_KEY: AI_KEY } });
+    const res = await run('POST', say('점검'), deps);
+    assert.equal(res.statusCode, 500, provider);
+    const text = JSON.stringify(res.body);
+    assert.ok(!text.includes('LLM_PROVIDER') && !text.includes('ANTHROPIC') && !text.includes(AI_KEY));
+    assert.equal(deps.seen.agentCalls.length, 0);
+    assert.equal(deps.seen.clients.length, 0);
+  }
+});
+
+test('기본 createClient: rule은 SDK를 불러오지 않고 규칙 클라이언트를 돌려준다', async () => {
+  const { default: realHandler } = await import('../api/agent.js');
+  assert.equal(typeof realHandler, 'function');
+  const { createClient } = await import('../api/agent.js');
+  const client = await createClient('rule');
+  assert.equal(typeof client.beta.messages.create, 'function');
+});
+
 test('ANTHROPIC_MODEL이 있으면 그 모델을 쓴다', async () => {
-  const deps = makeDeps({ envOverride: { ...env, ANTHROPIC_MODEL: 'claude-haiku-5-5' } });
+  const deps = makeDeps({ envOverride: { ...envAnthropic, ANTHROPIC_MODEL: 'claude-haiku-5-5' } });
   await run('POST', say('안녕'), deps);
   assert.equal(deps.seen.agentCalls[0].model, 'claude-haiku-5-5');
 });
@@ -97,9 +143,9 @@ test('GET은 405와 Allow 헤더', async () => {
   assert.equal(res.headers.allow, 'POST');
 });
 
-test('환경변수가 하나라도 없으면 500이고 응답에 변수 이름이 없다', async () => {
-  for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'ANTHROPIC_API_KEY']) {
-    const { [name]: omitted, ...rest } = env;
+test('Supabase 환경변수가 하나라도 없으면 500이고 응답에 변수 이름이 없다', async () => {
+  for (const name of ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']) {
+    const { [name]: omitted, ...rest } = envAnthropic;
     const deps = makeDeps({ envOverride: rest });
     const res = await run('POST', say('점검'), deps);
     assert.equal(res.statusCode, 500, name);
@@ -156,6 +202,7 @@ test('모델 쪽 오류는 502이고 응답·헤더·로그에 키가 없다', a
   try {
     for (const status of [401, 429, 529, undefined]) {
       const deps = makeDeps({
+        envOverride: envAnthropic,
         agent: async () => {
           throw Object.assign(new Error(`boom ${AI_KEY} ${SB_KEY} x.supabase.co`), { status });
         },
@@ -192,7 +239,7 @@ test('도구 기록이 실패해도 이미 만든 답은 돌려준다', async ()
   try {
     const res = await run('POST', say('점검'), makeDeps({ logFails: true }));
     assert.equal(res.statusCode, 200);
-    assert.deepEqual(res.body, RESULT);
+    assert.deepEqual(res.body, { ...RESULT, brain: 'rule' });
   } finally {
     console.error = original;
   }
