@@ -12,15 +12,24 @@ export function escapeHtml(value) {
 }
 
 function renderServer(s) {
-  const led = KNOWN.has(s.status) ? s.status : 'unknown';
+  const status = KNOWN.has(s.status) ? s.status : 'unknown';
   const issue = issueLabel(s.issue);
-  return `<li class="server" data-server-id="${escapeHtml(s.id)}">
-  <span class="led led-${led}" aria-hidden="true"></span>
-  <span class="name">${escapeHtml(s.name)}</span>
-  <span class="temp">${escapeHtml(s.tempC)}°C</span>
-  <span class="state">${escapeHtml(statusLabel(s.status))}</span>${
-    issue ? `\n  <span class="issue">${escapeHtml(issue)}</span>` : ''
-  }
+  const bays = '<span class="bay"></span>'.repeat(4);
+  return `<li class="server server--${status}" data-server-id="${escapeHtml(s.id)}">
+  <div class="faceplate">
+    <div class="bays">${bays}</div>
+    <div class="vent"></div>
+    <span class="fan ${s.fanOk ? 'fan-on' : 'fan-off'}" aria-hidden="true"></span>
+    <div class="plate">
+      <span class="led led-${status}" aria-hidden="true"></span>
+      <span class="name">${escapeHtml(s.name)}</span>
+      <span class="temp">${escapeHtml(s.tempC)}°C</span>
+      <span class="state">${escapeHtml(statusLabel(s.status))}</span>${
+        issue ? `
+      <span class="issue">${escapeHtml(issue)}</span>` : ''
+      }
+    </div>
+  </div>
 </li>`;
 }
 
