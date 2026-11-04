@@ -161,3 +161,22 @@ test('scripts/attack-check.mjs는 서버를 바꾸는 reset·정상 요청을 �
   assert.ok(source.includes('CHECKS'));
   assert.ok(source.includes('process.exit'));
 });
+
+test('scanForSecrets tokensOnly: 실제 키 모양만 보고 역할 이름 언급은 넘어간다', () => {
+  const hint = 'Double check your Supabase `anon` or `service_role` API key.';
+  assert.equal(scanForSecrets(hint), true);
+  assert.equal(scanForSecrets(hint, { tokensOnly: true }), false);
+  assert.equal(scanForSecrets(JWT_LIKE, { tokensOnly: true }), true);
+  assert.equal(scanForSecrets('sb_secret_abc123', { tokensOnly: true }), true);
+  assert.equal(scanForSecrets(OPENAI_LIKE, { tokensOnly: true }), true);
+});
+
+test('evaluate: tokensOnly 점검은 실제 키 모양이 있을 때만 실패한다', () => {
+  const check = { expect: [401], tokensOnly: true };
+  assert.equal(evaluate(check, { status: 401, text: 'hint: service_role key' }).pass, true);
+  assert.equal(evaluate(check, { status: 401, text: JWT_LIKE }).pass, false);
+});
+
+test('buildSupabaseChecks는 tokensOnly로 점검한다(제3자의 오류 안내문 오탐 방지)', () => {
+  for (const c of buildSupabaseChecks('https://example.supabase.co')) assert.equal(c.tokensOnly, true);
+});
