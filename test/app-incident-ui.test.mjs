@@ -38,3 +38,8 @@ test('app.js는 응답의 brain을 라벨로 보여 준다', () => {
   assert.ok(app.includes('brain'));
   assert.ok(app.includes('brainLabel'));
 });
+
+test('app.js는 가상 고객 문의 예시를 보내는 버튼을 처리한다', () => {
+  assert.ok(app.includes('agent-inquiry'));
+  assert.ok(app.includes('고객 문의:'));
+});

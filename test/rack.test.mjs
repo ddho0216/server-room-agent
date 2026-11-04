@@ -192,3 +192,24 @@ test('renderChat에 규칙 기반 시뮬레이션이라는 안내가 있다', ()
   assert.ok(html.includes('규칙'));
   assert.ok(html.includes('시뮬레이션'));
 });
+
+test('renderChat에 고객 문의 예시 버튼이 있다', () => {
+  const html = renderChat();
+  assert.ok(html.includes('id="agent-inquiry"'));
+  assert.ok(html.includes('고객 문의 예시'));
+});
+
+test('서버 없는 문의 티켓 카드는 제목, 분류, 답변 초안을 보여 주고 이스케이프하며 자른다', () => {
+  const html = renderPending([
+    {
+      id: 9,
+      tool: 'open_ticket',
+      input: { title: '[고객 문의] 네트워크', priority: 'high', category: 'network', reply: '<script>x</script>'.concat('가'.repeat(200)) },
+    },
+  ]);
+  assert.ok(html.includes('[고객 문의] 네트워크'));
+  assert.ok(html.includes('답변 초안'));
+  assert.ok(!html.includes('<script>'));
+  assert.ok(!html.includes('가'.repeat(121)));
+  assert.ok(html.includes('data-pending-id="9"'));
+});

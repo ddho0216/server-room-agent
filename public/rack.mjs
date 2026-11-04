@@ -72,7 +72,10 @@ export function renderChat() {
     <input id="agent-input" type="text" maxlength="300" placeholder="예: 서버 상태 확인해 줘" autocomplete="off">
     <button id="agent-send" type="button">보내기</button>
   </div>
-  <button id="agent-patrol" type="button" class="ghost">순회 점검 해줘</button>
+  <div class="chat-presets">
+    <button id="agent-patrol" type="button" class="ghost">순회 점검 해줘</button>
+    <button id="agent-inquiry" type="button" class="ghost">고객 문의 예시</button>
+  </div>
   <div id="agent-reply" class="reply" role="status"></div>
 </div>`;
 }
@@ -94,7 +97,9 @@ function pendingDetail(item) {
   const input = item.input && typeof item.input === 'object' ? item.input : {};
   if (item.tool === 'restart_fan') return String(input.serverId ?? '');
   if (item.tool === 'open_ticket') {
-    return `${input.serverId ?? ''}: ${input.title ?? ''} (${input.priority ?? ''})`;
+    const head = input.serverId ? `${input.serverId}: ${input.title ?? ''}` : String(input.title ?? '');
+    const reply = input.reply ? ` · 답변 초안: ${String(input.reply).slice(0, 120)}` : '';
+    return `${head} (${input.priority ?? ''})${reply}`;
   }
   if (item.tool === 'save_report') return String(input.body ?? '').slice(0, 80);
   return '';

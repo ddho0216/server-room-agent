@@ -230,6 +230,7 @@ h1 {
   color: #2a2740;
   background: var(--yellow);
 }
+.chat-presets { display: flex; flex-wrap: wrap; gap: 8px; }
 .chat button.ghost { background: transparent; color: var(--yellow); border: 1px dashed var(--yellow); justify-self: start; }
 .chat button:disabled { opacity: 0.5; cursor: wait; }
 .reply {

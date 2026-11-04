@@ -81,6 +81,7 @@ panel.addEventListener('click', (event) => {
 });
 
 // 부사수와 대화
+const SAMPLE_INQUIRY = '고객 문의: 어제부터 서버에 접속이 자꾸 끊긴다고 합니다. 빨리 확인해 달라고 하세요.';
 agentBox.innerHTML = renderChat();
 const input = agentBox.querySelector('#agent-input');
 const replyBox = agentBox.querySelector('#agent-reply');
@@ -116,6 +117,7 @@ agentBox.addEventListener('click', (event) => {
   if (!button) return;
   if (button.id === 'agent-send') ask(input.value);
   else if (button.id === 'agent-patrol') ask('순회 점검 해줘');
+  else if (button.id === 'agent-inquiry') ask(SAMPLE_INQUIRY);
 });
 input.addEventListener('keydown', (event) => {
   if (event.key === 'Enter' && !event.isComposing) ask(input.value);
