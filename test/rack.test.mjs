@@ -2,7 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SERVERS } from './fixtures.mjs';
-import { renderRack, renderError, renderIncidentPanel } from '../public/rack.mjs';
+import {
+  renderRack,
+  renderError,
+  renderIncidentPanel,
+  renderChat,
+  renderSteps,
+  renderPending,
+  renderLog,
+} from '../public/rack.mjs';
 
 const count = (text, needle) => text.split(needle).length - 1;
 
@@ -107,4 +115,73 @@ test('외부 주소를 부르지 않는다', () => {
   const css = readFileSync(new URL('../public/style.css', import.meta.url), 'utf8');
   assert.ok(!/url\(\s*['"]?https?:/i.test(css));
   assert.ok(!/@import/i.test(css));
+});
+
+test('renderChat에 입력칸, 보내기, 순회 점검, 답 자리가 있다', () => {
+  const html = renderChat();
+  assert.ok(html.includes('id="agent-input"'));
+  assert.ok(html.includes('maxlength="300"'));
+  assert.ok(html.includes('id="agent-send"'));
+  assert.ok(html.includes('id="agent-patrol"'));
+  assert.ok(html.includes('id="agent-reply"'));
+});
+
+test('renderSteps는 세 상태를 문구로 보여 주고 글자를 이스케이프한다', () => {
+  const html = renderSteps([
+    { tool: 'get_server_status', status: 'done' },
+    { tool: 'restart_fan', status: 'pending' },
+    { tool: 'open_ticket', status: 'error' },
+    { tool: '<img src=x>', status: 'done' },
+  ]);
+  assert.ok(html.includes('확인: 서버 상태'));
+  assert.ok(html.includes('제안: 팬 재가동'));
+  assert.ok(html.includes('실패: 티켓 열기'));
+  assert.ok(!html.includes('<img'));
+  assert.equal(renderSteps([]), '');
+  assert.equal(renderSteps(undefined), '');
+});
+
+test('renderPending은 카드마다 id와 승인·거절 버튼을 낸다', () => {
+  const html = renderPending([
+    { id: 5, tool: 'restart_fan', input: { serverId: 'db-01' } },
+    { id: 6, tool: 'open_ticket', input: { serverId: 'db-01', title: '팬 점검', priority: 'high' } },
+    { id: 7, tool: 'save_report', input: { kind: 'patrol', body: '이상 없음' } },
+  ]);
+  assert.equal(count(html, 'data-pending-id="'), 3);
+  assert.equal(count(html, 'class="approve"'), 3);
+  assert.equal(count(html, 'class="reject"'), 3);
+  assert.ok(html.includes('팬 재가동'));
+  assert.ok(html.includes('db-01'));
+  assert.ok(html.includes('팬 점검'));
+  assert.ok(html.includes('이상 없음'));
+});
+
+test('renderPending은 내용의 HTML을 이스케이프하고 비면 빈 문자열', () => {
+  const html = renderPending([
+    { id: 1, tool: 'open_ticket', input: { serverId: '<b>x</b>', title: '<script>alert(1)</script>', priority: 'low' } },
+    { id: 2, tool: '<i>t</i>', input: null },
+  ]);
+  assert.ok(!html.includes('<script>'));
+  assert.ok(!html.includes('<b>x</b>'));
+  assert.ok(!html.includes('<i>t</i>'));
+  assert.equal(renderPending([]), '');
+  assert.equal(renderPending(undefined), '');
+});
+
+test('renderPending은 id가 정수가 아닌 항목은 그리지 않는다', () => {
+  const html = renderPending([{ id: '5" onclick="x', tool: 'restart_fan', input: {} }, { id: 3.5, tool: 'restart_fan', input: {} }]);
+  assert.equal(html, '');
+});
+
+test('renderLog는 기록을 이스케이프하고 비면 안내', () => {
+  const html = renderLog([
+    { actor: 'user', tool: 'restart_fan', result: '<b>완료</b>', approved: true },
+    { actor: 'agent', tool: 'get_server_status', result: 'done', approved: null },
+  ]);
+  assert.ok(!html.includes('<b>완료</b>'));
+  assert.ok(html.includes('&lt;b&gt;'));
+  assert.ok(html.includes('선배'));
+  assert.ok(html.includes('부사수'));
+  assert.ok(renderLog([]).includes('아직 기록이 없어요'));
+  assert.ok(renderLog(undefined).includes('아직 기록이 없어요'));
 });

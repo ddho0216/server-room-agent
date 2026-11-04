@@ -198,6 +198,81 @@ h1 {
 
 .message { min-height: 1.4em; margin: 8px 2px 0; color: var(--pink); font-size: 13px; }
 
+/* 부사수 대화 */
+#agent, #pending, #activity { margin-top: 16px; }
+.chat {
+  padding: 12px;
+  background: #231f38;
+  border: 2px solid var(--yellow);
+  border-radius: 12px;
+  display: grid;
+  gap: 8px;
+}
+.chat label { font-size: 13px; color: var(--muted); }
+.chat-row { display: flex; gap: 8px; }
+.chat-row input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--text);
+  background: #15131f;
+  border: 1px solid #5a5680;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.chat button {
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #2a2740;
+  background: var(--yellow);
+}
+.chat button.ghost { background: transparent; color: var(--yellow); border: 1px dashed var(--yellow); justify-self: start; }
+.chat button:disabled { opacity: 0.5; cursor: wait; }
+.reply {
+  min-height: 1.4em;
+  padding: 10px 12px;
+  background: rgba(255, 158, 199, 0.12);
+  border-radius: 12px 12px 12px 4px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.reply:empty { display: none; }
+.steps { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12px; color: var(--muted); white-space: normal; }
+.step--pending { color: var(--yellow); }
+.step--error { color: var(--down); }
+
+.section-title { margin: 0 0 8px; font-size: 14px; color: var(--pink); }
+.pending-card {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  background: #2a2740;
+  border-left: 4px solid var(--yellow);
+  border-radius: 8px;
+}
+.pending-title { margin: 0; font-weight: 700; }
+.pending-detail { margin: 2px 0 8px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.pending-card button {
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-right: 6px;
+  color: #2a2740;
+}
+.pending-card .approve { background: var(--ok); }
+.pending-card .reject { background: var(--pink); }
+.pending-card button:disabled { opacity: 0.5; cursor: wait; }
+.log { list-style: none; margin: 0; padding: 0; font-size: 12px; color: var(--muted); }
+.log-row { padding: 4px 0; border-bottom: 1px solid rgba(140, 130, 200, 0.18); overflow-wrap: anywhere; }
+.log-row .who { color: var(--yellow); }
+
 @keyframes blink {
   50% { opacity: 0.25; }
 }

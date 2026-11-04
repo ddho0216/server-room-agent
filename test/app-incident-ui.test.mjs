@@ -20,3 +20,16 @@ test('index.html에 패널과 안내 자리가 있다', () => {
   assert.ok(html.includes('id="panel"'));
   assert.ok(html.includes('id="message"'));
 });
+
+test('app.js는 부사수, 승인, 활동 API를 부른다', () => {
+  assert.ok(app.includes("'/api/agent'"));
+  assert.ok(app.includes("'/api/approve'"));
+  assert.ok(app.includes("'/api/activity'"));
+  assert.ok(app.includes('409'));
+});
+
+test('index.html에 부사수, 승인 대기, 활동 자리가 있다', () => {
+  assert.ok(html.includes('id="agent"'));
+  assert.ok(html.includes('id="pending"'));
+  assert.ok(html.includes('id="activity"'));
+});

@@ -10,3 +10,19 @@ const ISSUE_LABELS = { temp: '온도 상승', disk: '디스크 경고', network:
 export function issueLabel(issue) {
   return Object.hasOwn(ISSUE_LABELS, issue) ? ISSUE_LABELS[issue] : '';
 }
+
+const TOOL_LABELS = {
+  get_server_status: '서버 상태',
+  get_cooling_temp: '냉각기 온도',
+  read_logs: '기록 읽기',
+  restart_fan: '팬 재가동',
+  open_ticket: '티켓 열기',
+  save_report: '보고서 저장',
+  agent_run: '부사수 호출',
+  reject: '거절',
+};
+
+export function toolLabel(name) {
+  if (name === undefined || name === null) return '';
+  return Object.hasOwn(TOOL_LABELS, name) ? TOOL_LABELS[name] : String(name);
+}
