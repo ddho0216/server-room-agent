@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { SERVERS } from './fixtures.mjs';
-import { renderRack, renderError } from '../public/rack.mjs';
+import { renderRack, renderError, renderIncidentPanel } from '../public/rack.mjs';
 
 const count = (text, needle) => text.split(needle).length - 1;
 
@@ -41,4 +41,31 @@ test('모션 줄이기 설정에서 깜빡임을 끈다', () => {
   const start = css.indexOf('prefers-reduced-motion');
   assert.ok(start >= 0, 'prefers-reduced-motion 블록이 없다');
   assert.ok(css.slice(start).includes('animation: none'), 'animation: none이 없다');
+});
+
+test('issue가 있는 서버에 사고 이름이 나온다', () => {
+  const html = renderRack([{ ...SERVERS[0], issue: 'temp' }]);
+  assert.ok(html.includes('class="issue"'));
+  assert.ok(html.includes('온도 상승'));
+});
+
+test('issue가 없거나 모르는 값이어도 깨지지 않는다', () => {
+  assert.ok(!renderRack([{ ...SERVERS[0], issue: null }]).includes('class="issue"'));
+  assert.ok(!renderRack([{ ...SERVERS[0], issue: 'boom' }]).includes('class="issue"'));
+  assert.ok(!renderRack([{ ...SERVERS[0], issue: '<script>' }]).includes('<script>'));
+});
+
+test('사고 패널에 서버 4개와 종류 3개 선택지가 있다', () => {
+  const html = renderIncidentPanel(SERVERS);
+  assert.equal(count(html, '<option value="web-01"'), 1);
+  assert.equal((html.match(/<option value="(web-01|app-02|db-01|cache-01)"/g) || []).length, 4);
+  for (const type of ['temp', 'disk', 'network']) assert.ok(html.includes(`<option value="${type}"`));
+  assert.ok(html.includes('id="incident-go"'));
+  assert.ok(html.includes('id="reset-go"'));
+});
+
+test('사고 패널은 서버 이름의 HTML을 이스케이프하고 서버가 없으면 비어 있다', () => {
+  const html = renderIncidentPanel([{ ...SERVERS[0], id: 'a', name: '<b>x</b>' }]);
+  assert.ok(!html.includes('<b>x</b>'));
+  assert.equal(renderIncidentPanel([]), '');
 });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { statusLabel } from '../public/servers.mjs';
+import { statusLabel, issueLabel } from '../public/servers.mjs';
 import { SERVERS } from './fixtures.mjs';
 
 test('테스트용 서버는 4대이고 id가 모두 다르다', () => {
@@ -25,4 +25,13 @@ test('statusLabel은 상태를 한국어로 바꾸고 모르는 값은 알 수 �
   assert.equal(statusLabel('down'), '장애');
   assert.equal(statusLabel('zzz'), '알 수 없음');
   assert.equal(statusLabel(undefined), '알 수 없음');
+});
+
+test('issueLabel은 사고 종류를 한국어로 바꾸고 없거나 모르는 값은 빈 문자열', () => {
+  assert.equal(issueLabel('temp'), '온도 상승');
+  assert.equal(issueLabel('disk'), '디스크 경고');
+  assert.equal(issueLabel('network'), '네트워크 끊김');
+  assert.equal(issueLabel(null), '');
+  assert.equal(issueLabel(undefined), '');
+  assert.equal(issueLabel('boom'), '');
 });
