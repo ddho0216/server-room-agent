@@ -158,3 +158,60 @@ test('applyChange open_ticket과 save_report', async () => {
 test('applyChange: 목록에 없는 도구는 ToolInputError', async () => {
   await assert.rejects(applyChange(makeCtx(), { tool: 'get_server_status', input: {} }), ToolInputError);
 });
+
+test('open_ticket: serverId 없이도 문의 티켓을 제안한다(없는 칸은 저장하지 않는다)', async () => {
+  const ctx = makeCtx();
+  const input = { title: '[고객 문의] 네트워크', priority: 'high', category: 'network', reply: '확인 후 연락드리겠습니다' };
+  const result = await proposeChange(ctx, 'open_ticket', input);
+  assert.deepEqual(result, { id: 41 });
+  assert.deepEqual(writes(ctx)[0].body.input, input);
+  assert.ok(!('serverId' in writes(ctx)[0].body.input));
+});
+
+test('open_ticket: serverId가 있으면 존재를 검증하고, category·reply가 잘못되면 거절한다', async () => {
+  const bad = [
+    { serverId: 'zzz', title: '확인', priority: 'low' },
+    { serverId: null, title: '확인', priority: 'low' },
+    { title: '확인', priority: 'low', category: 'fire' },
+    { title: '확인', priority: 'low', category: 7 },
+    { title: '확인', priority: 'low', reply: '' },
+    { title: '확인', priority: 'low', reply: '   ' },
+    { title: '확인', priority: 'low', reply: 'x'.repeat(501) },
+    { title: '확인', priority: 'low', reply: 5 },
+    { title: 'x'.repeat(81), priority: 'low' },
+    { title: '확인', priority: 'low', extra: 1 },
+  ];
+  for (const input of bad) {
+    const ctx = makeCtx();
+    await assert.rejects(proposeChange(ctx, 'open_ticket', input), ToolInputError, JSON.stringify(input).slice(0, 60));
+    assert.equal(writes(ctx).length, 0);
+  }
+  const ctx = makeCtx();
+  await proposeChange(ctx, 'open_ticket', { title: '확인', priority: 'low', reply: 'x'.repeat(500) });
+  assert.equal(writes(ctx).length, 1);
+});
+
+test('applyChange open_ticket: 서버 없는 문의 티켓과 답변 초안', async () => {
+  const ctx = makeCtx();
+  await applyChange(ctx, { tool: 'open_ticket', input: { title: '[고객 문의] 기타', priority: 'normal' } });
+  assert.deepEqual(writes(ctx)[0].body, { source: 'agent', category: 'other', priority: 'normal', body: '[고객 문의] 기타' });
+  await applyChange(ctx, {
+    tool: 'open_ticket',
+    input: { title: '[고객 문의] 네트워크', priority: 'high', category: 'network', reply: '확인 후 연락드리겠습니다' },
+  });
+  assert.deepEqual(writes(ctx)[1].body, {
+    source: 'agent',
+    category: 'network',
+    priority: 'high',
+    body: '[고객 문의] 네트워크\n답변 초안: 확인 후 연락드리겠습니다',
+  });
+});
+
+test('open_ticket 스키마: 필수는 title, priority이고 category, reply 칸이 있다', () => {
+  const schema = TOOLS.find((t) => t.name === 'open_ticket').input_schema;
+  assert.deepEqual(schema.required, ['title', 'priority']);
+  assert.equal(schema.additionalProperties, false);
+  assert.deepEqual(schema.properties.category.enum, ['server', 'power', 'network', 'access', 'other']);
+  assert.equal(schema.properties.reply.maxLength, 500);
+  assert.ok('serverId' in schema.properties);
+});
